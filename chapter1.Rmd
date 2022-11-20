@@ -1,11 +1,15 @@
 
 # About the project
 
+<<<<<<< HEAD
 I'm here to learn new skills and improve olds. The course fits perdectly to my needs. I have used R a lot, but havent shared my code outside of our research group, so learning good practises is very welcome.
 I did go throw Exercise1 'warm up' pretty fast and everything was pretty familiar. As a note for my self, the syntax and used functions was many way different than what i have used to get same goal. Might be good to start to use less 'intermediate' objects and more 'tidyverse' style. I like to use Atom for writing a script, so it's be nice to try to do things differently.
 
 My github: https://github.com/jvehvi/IODS-project 
 
+=======
+*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+>>>>>>> remotes/origin/WEEK1
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
@@ -13,4 +17,8 @@ My github: https://github.com/jvehvi/IODS-project
 date()
 
 ```
+<<<<<<< HEAD
+=======
+The text continues here.
+>>>>>>> remotes/origin/WEEK1
 
