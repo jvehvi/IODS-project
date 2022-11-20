@@ -133,7 +133,7 @@ Hints:
 library(dplyr)
 
 # give the columns that vary in the two data sets
-free_cols
+free_cols<-c("failures", "paid", "absences", "G1", "G2","G3")
 
 # the rest of the columns are common identifiers used for joining the data sets
 join_cols <- setdiff(colnames(por), "change me!")

@@ -4,21 +4,21 @@ markdown: `date()`
 wrap: 72
 ---
 
-# IODS 2022 Exercise set 2
+# Assignment 2 Regression and model validation
 This week topic was Regression and model validation. Here we present basic R commands to build up summary tables and linear models which can be used for finding cause-and-effect relationships between different variables.
 
-# Data wrangling
+## Data wrangling
 
-## PART 1
+### PART 1
 
 ```{r}
 # Set up workind dir
-setwd("D://IODS-project") 
+setwd("E:/Open science course 2022/IODS-project") 
 dir.create(paste0(getwd(),"/Data"))
 setwd(paste0(getwd(),"/Data"))
 ```
 
-## PART 2
+### PART 2
 Bring .txt file to R environment which has been downloaded to Data - folder.
 ```{r}
 learning_2014<-as.data.frame(read.table("Data/learning2014.txt", header = TRUE, sep = "\t"))
@@ -26,7 +26,7 @@ learning_2014<-as.data.frame(read.table("Data/learning2014.txt", header = TRUE, 
 
 Table should have 183 rows and 60 cols containing integer values in all except last column which contains information about gender by character.
 
-## PART 3
+### PART 3
 
 -   Subset Data set to contain columns: gender, age, attitude, deep, stra, surf and points.
 -   Remove also rows which have 0 in Points.
@@ -60,20 +60,20 @@ attitude <- c("Da","Db","Dc","Dd","De","Df","Dg","Dh","Di","Dj")
 df$Attitude<-rowMeans(analy_dataset[,colnames(analy_dataset) %in% attitude], na.rm=TRUE)
 ```
 
-## PART 4
+### PART 4
 
 ```{r}
 # Change working dir
-setwd("D://IODS-project")
+setwd("E:/Open science course 2022/IODS-project")
 # Write results to .csv format file
 write.csv2(df,"Data/learning2014.csv")
 # Read saved .csv file. Header= TRUE means that file has headers. sep=";" means that values are separated by ;. dec="," means that in the file ',' has been used for decimals
 learning_2014.2<-as.data.frame(read.table("Data/learning2014.csv", header = TRUE, sep = ";", dec=","))
 ```
 
-# Analysis
+## Analysis
 
-## PART 1 - Read file to R environment
+### PART 1 - Read file to R environment
 
 Data set contains summary results of course 'Johdatus yhteiskuntatilastotieteeseen, syksy 2014' survey. There should be 7 variables (gender, age, attitude, deep, stra, surf and points) and 166 observations.''' Gender: Male = 1 Female = 2 Age: Age (in years) derived from the date of birth Attitude: Global attitude toward statistics. Mean of original variables (\~Da+Db+Dc+Dd+De+Df+Dg+Dh+Di+Dj) Deep: Deep approach. Mean of original variables (\~d_sm+d_ri+d_ue) Stra: Strategic approach. Mean of original variables ( \~st_os+st_tm) Surf: Surface approach. Mean of original variables (\~su_lp+su_um+su_sb) Points: Total counts from survey. More information about used variables can be found from <http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt>'''
 
@@ -84,7 +84,7 @@ learning_2014.2<-as.data.frame(read.table("Data/learning2014.csv", header = TRUE
 dim(learning_2014.2)
 ```
 
-## PART 2
+### PART 2
 
 By commend summary we can take a look 'inside' the data. By the command we get 'boxplot information' about our numerical data in dataframe. Scatterplot matrix is used to describe relationships between the variables. It's constructed from the dataframe with ggpairs -function (ggplot2 -package). Result plot shows, in addition of variables relationships, variables diverging and gives correlation coefficients with asterix showing level of significance.
 
@@ -101,7 +101,7 @@ print(p)
 Most promising relationship seems to be between: Attitude and Points, and Surf and Deep.\
 There seems to be also some kind of relationship between: Stra and Surf. As overall, matrix gives good overlook of data, and starting point to study more relationships between variables'''
 
-## PART 3 and PART 4
+### PART 3 and PART 4
 
 Create a regression model with multiple explanatory variables
 
@@ -120,9 +120,7 @@ summary(my_model3)
 
 Now results seems to be better and p-value is significant for the variable relationship as well as for the model. Multiple R-squared is the proportion of the variation in dependent variable that can be explained by the independent variable. So in the model where we haves three variables 20.74 % of the variation in Points can be explained by variables. But now interesting is that Attitude by itself explains 19.06 % of the variation. Showing us that Stra and Surf effect to the points is pretty minimal.
 
-# PART 5
-
-## Study more our model with diagnostic plots
+### PART 5 - Study more our model with diagnostic plots
 
 ```{r}
 plot(my_model3, which=c(1,2,5))

@@ -9,22 +9,131 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Assignment 3 - Logistic regression
+## Bring Data to R
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+For the study material from UCI Machine Learning Repository, Student Performance Data (incl. Alcohol consumption) page (https://archive.ics.uci.edu/ml/datasets/Student+Performance) has been used as a source data table. 
+The joined data set which will be used in the analysis, contains two student alcohol consumption data sets from the web page. The variables not used for joining the two data have been combined by averaging (including the grade variables):
+  'alc_use' is the average of 'Dalc' and 'Walc'
+  'high_use' is TRUE if 'alc_use' is higher than 2 and FALSE otherwise
+More information about variables can be found from:
+https://archive.ics.uci.edu/ml/datasets/Student+Performance
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+library(tidyverse)
 
-```{r cars}
-summary(cars)
+# Read data table to R - environment
+wrangled_student_mat_por <- as.data.frame(read_csv("Data/wrangled_student_mat_por.csv"))
+colnames(wrangled_student_mat_por)
+```
+## Select intresting variables 
+For studying variables relationships to alcohol, I have selected four variables that I hypothesize to have relationship to person alcohol consumption.
+Age - I think that persons over 18 use more alcohol.
+romantic - I think that single persons drinks more often.
+studytime - I think persons which study more weekly, drink less.
+freetime - I think persons which have more free time might drink more.
+
+```{r}
+library(ggplot2)
+library(GGally)
+
+# Summary table
+int_variables<-c("age","romantic","studytime","freetime","alc_use","high_use")
+summary(wrangled_student_mat_por[int_variables])
+
+# Unique values for romantic column
+unique(wrangled_student_mat_por$romantic)
+
+# Group by romantic before summarise
+wrangled_student_mat_por %>% group_by(romantic) %>% summarise(count = n())
+
+# Scatterplot
+p <- ggpairs(wrangled_student_mat_por[int_variables], mapping = aes(), lower =list(combo = wrap("facethist", bins = 20))) 
+p
 ```
 
-## Including Plots
+Results shows that there seems to be somekind of relationship atleast between alchol and freetime, - studytime and age. POsitive correlation can be seem between alcohol use and freetime. Negative correlation between alcohol use and study time, and alcohol use and age. Intresting find out is that young persons (15-18) seems to drink more than ages 19 -21.
 
-You can also embed plots, for example:
+## Logistic regression
+- Use `glm()` to fit a logistic regression model with `high_use` as the target variable and `freetime, studytime, age and romantic` as the predictors.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+m <- glm(high_use ~ freetime + studytime + age + factor(romantic), data = wrangled_student_mat_por, family = "binomial")
+
+# Summary
+summary(m)
+
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+
+```
+The results shows that widest range is for variable 'romantic'. Range also contains 1 so most propably alcohol_consumption and romantic don't have relationships, more like the variables are independent of each other.
+Freetime and age has OD and condidence interval  > 1, so there seems to be positive correlation between those and high_use. Studytime values are < 1 meaning negative correlation between it and high_use.
+
+## Predictive power of the model
+
+```{r}
+# Let's select only freetime, studytime and age for next model
+m <- glm(high_use ~ freetime + studytime + age, data = wrangled_student_mat_por, family = "binomial")
+
+# Summary
+summary(m)
+
+# Prediction plots
+par(mfrow=c(2,2))
+plot(m)
+
+# Probability
+wrangled_student_mat_por <- mutate(wrangled_student_mat_por, probability = predict(m, type = "response"))
+# Prediction
+wrangled_student_mat_por <- mutate(wrangled_student_mat_por, prediction = probability > 0.5)
+
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = wrangled_student_mat_por$high_use, prob = 0)
+
+```
+## 10-fold cross-validation 
+
+```{r}
+library(caret)
+
+#specify the cross-validation method
+ctrl <- trainControl(method = "cv", number = 10)
+
+#fit a regression model and use k-fold CV to evaluate performance
+model <- train(factor(high_use) ~ freetime + studytime + age, data = wrangled_student_mat_por, family = "binomial", method = "glm", trControl = ctrl)
+model
+summary(model)
+
+#view final model
+model$finalModel
+
+```
+## Perform cross-validation to compare the performance of different logistic regression models
+
+```{r}
+
+# Define training control
+set.seed(123)
+train.control <- trainControl(method = "repeatedcv", 
+                              number = 10, repeats = 3)
+# Train the model
+model <- train(Fertility ~., data = swiss, method = "lm",
+               trControl = train.control)
+# Summarize the results
+print(model)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
