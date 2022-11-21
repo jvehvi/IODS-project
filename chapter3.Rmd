@@ -27,10 +27,15 @@ wrangled_student_mat_por <- as.data.frame(read_csv("Data/wrangled_student_mat_po
 colnames(wrangled_student_mat_por)
 ```
 ## Select intresting variables 
+
 For studying variables relationships to alcohol, I have selected four variables that I hypothesize to have relationship to person alcohol consumption.
+
 Age - I think that persons over 18 use more alcohol.
+
 romantic - I think that single persons drinks more often.
+
 studytime - I think persons which study more weekly, drink less.
+
 freetime - I think persons which have more free time might drink more.
 
 ```{r}
@@ -55,6 +60,7 @@ p
 Results shows that there seems to be somekind of relationship atleast between alchol and freetime, - studytime and age. POsitive correlation can be seem between alcohol use and freetime. Negative correlation between alcohol use and study time, and alcohol use and age. Intresting find out is that young persons (15-18) seems to drink more than ages 19 -21.
 
 ## Logistic regression
+
 - Use `glm()` to fit a logistic regression model with `high_use` as the target variable and `freetime, studytime, age and romantic` as the predictors.
 
 ```{r}
@@ -73,38 +79,72 @@ CI <- confint(m) %>% exp
 cbind(OR, CI)
 
 ```
-The results shows that widest range is for variable 'romantic'. Range also contains 1 so most propably alcohol_consumption and romantic don't have relationships, more like the variables are independent of each other.
+
+The results shows that widest range is for variable 'romantic'. Range also contains 1 so most probably alcohol_consumption and romantic don't have relationships, more like the variables are independent of each other.
 Freetime and age has OD and condidence interval  > 1, so there seems to be positive correlation between those and high_use. Studytime values are < 1 meaning negative correlation between it and high_use.
 
 ## Predictive power of the model
 
+Next, I have build up new model excluding 'romantic' which seems to have no-relationship to students alcohol use. After building model, I have taken summary information about the model and calculated the mean prediction error.
+
 ```{r}
-# Let's select only freetime, studytime and age for next model
+library(caret)
+# Let's select only freetime, studytime and age for the next model
 m <- glm(high_use ~ freetime + studytime + age, data = wrangled_student_mat_por, family = "binomial")
 
 # Summary
 summary(m)
 
-# Prediction plots
-par(mfrow=c(2,2))
-plot(m)
-
+# Making predictions on the train set.
 # Probability
 wrangled_student_mat_por <- mutate(wrangled_student_mat_por, probability = predict(m, type = "response"))
 # Prediction
 wrangled_student_mat_por <- mutate(wrangled_student_mat_por, prediction = probability > 0.5)
+# 2x2 cross tabulation of predictions versus the actual values
+table(high_use = wrangled_student_mat_por$high_use, prediction = wrangled_student_mat_por$prediction)
 
-# define a loss function (mean prediction error)
-loss_func <- function(class, prob) {
-  n_wrong <- abs(class - prob) > 0.5
-  mean(n_wrong)
+# Making predictions on the test set.
+test_pred<- ifelse(predict(m, newdata = wrangled_student_mat_por, type = "response") > 0.5, "TRUE", "FALSE")
+# 2x2 cross tabulation of predictions versus the actual values
+table(high_use = wrangled_student_mat_por$high_use, prediction = test_pred)
+
+# We can study our model goodness more by looking ConfusionMatrix of the results
+confusionMatrix(table(high_use = wrangled_student_mat_por$high_use, prediction = test_pred))
+
+# Prediction plot
+# access dplyr and ggplot2
+library(dplyr); library(ggplot2)
+
+# initialize a plot of 'high_use' versus 'probability' in 'wrangled_student_mat_por'
+# define the geom as points and draw the plot
+g <- ggplot(wrangled_student_mat_por, aes(x = high_use, y =as.numeric(probability))) +
+    geom_point(aes(y = as.numeric(probability)), alpha = 0.2)
+
+# ROC curve
+library('pROC')
+test_prob <- predict(m, newdata = wrangled_student_mat_por, type = "response")
+test_roc <- roc(wrangled_student_mat_por$high_use ~ test_prob, plot = TRUE, print.auc = TRUE)
+test_roc
+# Define a loss function (mean prediction error)
+calc_class_err <- function(actual, predicted) {
+  mean(actual != predicted)
 }
 
 # call loss_func to compute the average number of wrong predictions in the (training) data
-loss_func(class = wrangled_student_mat_por$high_use, prob = 0)
+calc_class_err(actual = wrangled_student_mat_por$high_use, predicted = wrangled_student_mat_por$prediction)
+
+# call loss_func to compute the average number of wrong predictions in the (test) data
+# Error rate should be near each other with training and testing data
+calc_class_err(actual = wrangled_student_mat_por$high_use, predicted = test_pred)
 
 ```
+Our results shows that approximately 30 % of our predictions are wrong, so the accuracy  for our model is 0.7 which is at least better than pure guess. We selected 0.5 as a threshold for classification, that value is our choice and it goodness for accuracy can be study from ROC-curve. In this study, it's okay.
+Test error rate is same as train error rate, so our model seems to be fitted properly.
+When predictions are compared to high_use we can see that our predictions have too many < 2 points drinker compared to real situation, and reversal too less high user.
+
 ## 10-fold cross-validation 
+
+Lets perform 10-fold cross-validation for our model to see if we get better test set performance. 10-fold means that all our observations are grouped to 10 bins
 
 ```{r}
 library(caret)
@@ -115,25 +155,98 @@ ctrl <- trainControl(method = "cv", number = 10)
 #fit a regression model and use k-fold CV to evaluate performance
 model <- train(factor(high_use) ~ freetime + studytime + age, data = wrangled_student_mat_por, family = "binomial", method = "glm", trControl = ctrl)
 model
+
+# Show also summary of model
 summary(model)
 
-#view final model
+#View final model parameters
 model$finalModel
 
 ```
+
+
+The results shows that our accuracy is app. 0.70 meaning that 30 % of our predictions are wrong. Actually, results are almost same than with Logistic regression model, so in this case there isn't any point to use 10-fold cross-validation.
+Typically, as k gets larger, the difference in size between the training set and the resampling subsets gets smaller. As this difference decreases, the bias of the technique becomes smaller but there is a bias-variance trade-off associated with the choice of k in k-fold cross-validation. Typically choice for k has been done using k=10 or k=5 because those has been shown empirically to yield test error rate estimates that suffer neither from excessively high bias nor from very high variance
+According summary table of model, study time has most negative impact to alcohol use. Freetime has most positive correlation to high_use, and age variable has also significant effect to drinking habit. Basically, results seems to be line with earlier results.
+
+
 ## Perform cross-validation to compare the performance of different logistic regression models
 
-```{r}
+For testing and comparing different models performances, I have select 10 variables as a starting point and removed 'the worst' one after one that we have three variables left.
+Selected variables are:
+  famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3) 
+  
+  Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
+  
+  Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
+  
+  traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)
+  
+  famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent) 
+  
+  sex - student's sex (binary: 'F' - female or 'M' - male)
+  
+  health - current health status (numeric: from 1 - very bad to 5 - very good)
+  
+  freetime - free time after school (numeric: from 1 - very low to 5 - very high) 
+  
+  studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)
+  
+  age - student's age (numeric: from 15 to 22)
+  
+The data has been divided to test and training sets, so we could better understood those two relationships.
 
-# Define training control
-set.seed(123)
-train.control <- trainControl(method = "repeatedcv", 
-                              number = 10, repeats = 3)
-# Train the model
-model <- train(Fertility ~., data = swiss, method = "lm",
-               trControl = train.control)
-# Summarize the results
-print(model)
+```{r}
+# select only columns under interest
+wrangled_student_mat_por_sub <- wrangled_student_mat_por[,colnames(wrangled_student_mat_por) %in% c("famsize","Medu","Fedu","traveltime","famrel","sex","health","freetime","studytime","age","high_use")]
+
+# Divide data to test and training sets by using 70 % of the data for the training set
+dat <- list()
+dat[['index']] <- sample(nrow(wrangled_student_mat_por_sub), size = nrow(wrangled_student_mat_por_sub) * 0.7)
+dat[['training']] <- wrangled_student_mat_por_sub[dat$index, ]
+dat[['test']] <- wrangled_student_mat_por_sub[-dat$index,]
+
+# Empty lists
+count_of_variables <- test_mses <- training_mses <- list()
+# For loop to test different counts of variables
+for (i in 1:(ncol(wrangled_student_mat_por_sub)- 1)) {
+    
+    # Build new model every iteration containing one variable less    
+    train_mod <-glm(high_use~., data = dat$training[,i:ncol(dat$training)])
+    
+    # Predict values for training data
+    y_hat_training <- predict(train_mod, type = "response")
+    train_predict = y_hat_training > 0.5
+    # Collect training error
+    training_mses[[i]] <- calc_class_err(actual = dat$training$high_use, predicted = train_predict)
+    
+    # Predict values for testing data
+    y_hat_test <- predict(train_mod, newdata = dat$test)
+    test_predict = y_hat_test > 0.5
+    test_mses[[i]] <- calc_class_err(actual = dat$test$high_use, predicted = test_predict)
+    
+    count_of_variables[[i]] <- length(train_mod$coefficients) - 1
+}
+
+# Build dataframe from results to be used in ggplot
+df<-data.frame(Number_of_Variables=unlist(count_of_variables), Test_error=unlist(test_mses),
+                Training_error=unlist(training_mses))
+# Build plot
+library("reshape2")
+df_long<-melt(df, id="Number_of_Variables",)
+df_long$Number_of_Variables<-factor(df_long$Number_of_Variables, levels=df$Number_of_Variables)
+a<-ggplot(df_long, aes(x = Number_of_Variables,y=value, color=variable, group=variable)) +
+    geom_point() +
+    geom_line() +
+    geom_smooth() +
+    scale_x_discrete(limits = rev(levels(df$Number_of_Variables)))
+a
+
 ```
 
+
+In the plot, test - and training errors against 'Number of prediction variables in model' are shown with own lines. I have selected ten variables which might have effect to alcohol consumption. 
+Typically, training error is which is less than test error indicates that model over fits to the training data. The model can be think to be good enough when test and training errors are near each other.
+E.g. from the plot, can be see that training error first rise in range 10-8 and in same range test error is lower and remains almost unchanged. Over fitting can be seen with range 7-5 and 3-1. When we have four variables in our model, test and training error are near each others indicating goodness of our model. And this results, seems to change depending how data is divided to test and training sets.
+According these results, the logistic regression model with four variables seems to be good if selected variables are good. Different grouping for selected variables should be also performed to catch out which four variables would be the best ones.
 
