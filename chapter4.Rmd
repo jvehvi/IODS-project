@@ -1,10 +1,11 @@
 ---
-title: "chapter4.Rmd"
-output: html_document
+title: "4: Clustering and classification"
+author: "Jussi Vehviläinen"
 date: "2022-11-24"
+output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup_week4, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -36,7 +37,7 @@ The Boston Housing Dataset is a derived from information collected by the U.S. C
  *   MEDV - Median value of owner-occupied homes in $1000's
 
 ## Summary and graphical overview of the data
-```{r, echo=FALSE}
+```{r Summary, echo=FALSE}
 # Bring needed libraries to R-environment
 library(MASS)
 library(ggplot2)
@@ -66,20 +67,19 @@ ggplot(bosmelt, aes(x=value, y=crim))+
 
 # Correlation matrix and visualization
 ## Matrix
-corrmatrix <- cor(Boston, use = "complete.obs")
+corrmatrix <- cor(Boston)
 corrmatrix
 ## Visualization
 corrplot(corrmatrix, method="circle")
-
-
 ```
 
 ## Standardize the dataset
 
 You can also embed plots, for example:
 
-```{r}
+```{r Standardise, echo=FALSE}
 # Check head of original data to compare scaled data
+data("Boston")
 head(Boston)
 # center and standardize variables, also set output to be data.frame
 boston_scaled <- as.data.frame(scale(Boston, center = TRUE, scale = TRUE))
@@ -110,18 +110,16 @@ boston_scaled <- data.frame(boston_scaled, crime)
 
 # Set 'crime' to factor variable, and give relevant levels
 boston_scaled$crime <- factor(boston_scaled$crime, levels = c("low", "med_low", "med_high", "high"))
-
 ```
 
+
 ## Divide the dataset to train and test sets
-Data will be divided 80/20 to train and test sets
 
-```{r}
-# Bring needed libraries to R-environment
-library(dplyr)
-library(MASS)
+* Data will be divided 80/20 to train and test sets
 
+```{r Train_Test, echo=TRUE}
 # Bring Boston data table from github to R
+
 boston_scaled <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/boston_scaled.txt", sep=",", header = T)
 
 # Change 'crime' to factor variable with relevant levels
@@ -135,25 +133,25 @@ ind <- sample(n,  size = n * 0.8)
 
 # create train set
 train <- boston_scaled[ind,]
-
+dim(train)
 # create test set 
 test <- boston_scaled[-ind,]
+dim(test)
 
 # save the correct classes from test data
 correct_classes <- test$crime
 
 # remove the crime variable from test data
 test <- dplyr::select(test, -crime)
-
+head(test)
 ```
-
 
 
 ## Fit the linear discriminant analysis on the train se
 
 * Crime rate as the target variable and all the other variables in the dataset as predictor variables.
-```{r}
 
+```{r Model, echo=TRUE}
 # linear discriminant analysis
 lda.fit <- lda(crime ~., data = train)
 
@@ -176,13 +174,11 @@ classes <- as.numeric(train$crime)
 # plot the lda results
 plot(lda.fit, dimen = 2) +
   lda.arrows(lda.fit, myscale = 1)
-
-
 ```
 
 ## Predict the classes with the LDA model on the test data
 
-```{r}
+```{r, echo=FALSE}
 # predict classes with test data
 lda.pred <- predict(lda.fit, newdata = test)
 
@@ -193,8 +189,10 @@ table(correct = correct_classes, predicted = lda.pred$class)
 ## Reload the Boston dataset and standardize the dataset 
 
 * Scale all variables to have mean = 0 and standard deviation = 1
-```{r}
+```{r Scale}
 # Bring data to R
+library(MASS)
+library(dplyr)
 data(Boston)
 # Standaridise data
 standardised_boston <- as.data.frame(Boston %>%mutate_all(~(scale(.) %>% as.vector)))
@@ -223,24 +221,24 @@ pairs(Boston, col = km$cluster)
 # K-means clustering, center 3
 km <- kmeans(Boston, centers = 3)
 # plot the Boston dataset with clusters
-ggpairs(Boston[1:5], col = km$cluster)
-ggpairs(Boston[6:10], col = km$cluster)
-ggpairs(Boston[11:ncol(Boston)], col = km$cluster)
+pairs(Boston[1:5], col = km$cluster)
+pairs(Boston[6:10], col = km$cluster)
+pairs(Boston[11:ncol(Boston)], col = km$cluster)
 
 
 # K-means clustering, center 2
 km <- kmeans(Boston, centers = 2)
 # plot the Boston dataset with clusters
-ggpairs(Boston[1:5], col = km$cluster)
-ggpairs(Boston[6:10], col = km$cluster)
-ggpairs(Boston[11:ncol(Boston)], col = km$cluster)
+pairs(Boston[1:5], col = km$cluster)
+pairs(Boston[6:10], col = km$cluster)
+pairs(Boston[11:ncol(Boston)], col = km$cluster)
 
 # K-means clustering, center 1
 km <- kmeans(Boston, centers = 1)
 # plot the Boston dataset with clusters
-ggpairs(Boston[1:5], col = km$cluster)
-ggpairs(Boston[6:10], col = km$cluster)
-ggpairs(Boston[11:ncol(Boston)], col = km$cluster)
+pairs(Boston[1:5], col = km$cluster)
+pairs(Boston[6:10], col = km$cluster)
+pairs(Boston[11:ncol(Boston)], col = km$cluster)
 ```
 
 Distances in Manhattan method are longer. Two clusters seems to be best.

@@ -206,7 +206,6 @@ Hints:
 
 ### R code
 ```{r}
-# Work with the exercise in this chunk, step-by-step. Fix the R code!
 # Boston and boston_scaled are available
 
 # summary of the scaled crime rate
@@ -483,10 +482,10 @@ Hints:
 # Boston dataset is available
 
 # k-means clustering
-km <- kmeans(Boston, centers = "change me!")
+km <- kmeans(Boston, centers = 4)
 
 # plot the Boston dataset with clusters
-pairs(Boston, col = "change me!")
+pairs(Boston, col = km$cluster)
 
 
 
