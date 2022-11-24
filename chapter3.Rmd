@@ -14,8 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 For the study material from UCI Machine Learning Repository, Student Performance Data (incl. Alcohol consumption) page (https://archive.ics.uci.edu/ml/datasets/Student+Performance) has been used as a source data table. 
 The joined data set which will be used in the analysis, contains two student alcohol consumption data sets from the web page. The variables not used for joining the two data have been combined by averaging (including the grade variables):
-  'alc_use' is the average of 'Dalc' and 'Walc'
-  'high_use' is TRUE if 'alc_use' is higher than 2 and FALSE otherwise
+  + 'alc_use' is the average of 'Dalc' and 'Walc'
+  + 'high_use' is TRUE if 'alc_use' is higher than 2 and FALSE otherwise
 More information about variables can be found from:
 https://archive.ics.uci.edu/ml/datasets/Student+Performance
 
@@ -30,13 +30,13 @@ colnames(wrangled_student_mat_por)
 
 For studying variables relationships to alcohol, I have selected four variables that I hypothesize to have relationship to person alcohol consumption.
 
-Age - I think that persons over 18 use more alcohol.
+* Age - I think that persons over 18 use more alcohol.
 
-romantic - I think that single persons drinks more often.
+* romantic - I think that single persons drinks more often.
 
-studytime - I think persons which study more weekly, drink less.
+* studytime - I think persons which study more weekly, drink less.
 
-freetime - I think persons which have more free time might drink more.
+* freetime - I think persons which have more free time might drink more.
 
 ```{r}
 library(ggplot2)
@@ -61,7 +61,7 @@ Results shows that there seems to be somekind of relationship atleast between al
 
 ## Logistic regression
 
-- Use `glm()` to fit a logistic regression model with `high_use` as the target variable and `freetime, studytime, age and romantic` as the predictors.
+Use `glm()` to fit a logistic regression model with `high_use` as the target variable and `freetime, studytime, age and romantic` as the predictors.
 
 ```{r}
 m <- glm(high_use ~ freetime + studytime + age + factor(romantic), data = wrangled_student_mat_por, family = "binomial")
@@ -174,25 +174,25 @@ According summary table of model, study time has most negative impact to alcohol
 
 For testing and comparing different models performances, I have select 10 variables as a starting point and removed 'the worst' one after one that we have three variables left.
 Selected variables are:
-  famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3) 
+*  famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3) 
   
-  Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
+*  Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
   
-  Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
+*  Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 â€“ 5th to 9th grade, 3 â€“ secondary education or 4 â€“ higher education)
   
-  traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)
+*  traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)
   
-  famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent) 
+*  famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent) 
   
-  sex - student's sex (binary: 'F' - female or 'M' - male)
+*  sex - student's sex (binary: 'F' - female or 'M' - male)
   
-  health - current health status (numeric: from 1 - very bad to 5 - very good)
+*  health - current health status (numeric: from 1 - very bad to 5 - very good)
   
-  freetime - free time after school (numeric: from 1 - very low to 5 - very high) 
+*  freetime - free time after school (numeric: from 1 - very low to 5 - very high) 
   
-  studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)
+*  studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)
   
-  age - student's age (numeric: from 15 to 22)
+*  age - student's age (numeric: from 15 to 22)
   
 The data has been divided to test and training sets, so we could better understood those two relationships.
 

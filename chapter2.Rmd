@@ -13,7 +13,7 @@ This week topic was Regression and model validation. Here we present basic R com
 
 ```{r}
 # Set up workind dir
-setwd("E:/Open science course 2022/IODS-project") 
+setwd("D:/IODS-project") 
 dir.create(paste0(getwd(),"/Data"))
 setwd(paste0(getwd(),"/Data"))
 ```
@@ -28,11 +28,11 @@ Table should have 183 rows and 60 cols containing integer values in all except l
 
 ### PART 3
 
--   Subset Data set to contain columns: gender, age, attitude, deep, stra, surf and points.
--   Remove also rows which have 0 in Points.
--   Deep is calculated by taking the mean of cols: c("D03","D11","D19","D27","D03","D11","D19","D27","D06","D15","D23","D31") and excluding 0.
--   Stra is calculated by taking the mean of cols: c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28") and excluding 0.
--   Surf is calculated by taking the mean of cols: c("SU02","SU10","SU18","SU26","SU05","SU13","SU21","SU29","SU08","SU16","SU24","SU32") and excluding 0.
+* Subset Data set to contain columns: gender, age, attitude, deep, stra, surf and points.
+* Remove also rows which have 0 in Points.
+* Deep is calculated by taking the mean of cols: c("D03","D11","D19","D27","D03","D11","D19","D27","D06","D15","D23","D31") and excluding 0.
+* Stra is calculated by taking the mean of cols: c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28") and excluding 0.
+* Surf is calculated by taking the mean of cols: c("SU02","SU10","SU18","SU26","SU05","SU13","SU21","SU29","SU08","SU16","SU24","SU32") and excluding 0.
 
 ```{r}
 # Remove rows which have 0 in Points
@@ -64,7 +64,7 @@ df$Attitude<-rowMeans(analy_dataset[,colnames(analy_dataset) %in% attitude], na.
 
 ```{r}
 # Change working dir
-setwd("E:/Open science course 2022/IODS-project")
+setwd("D:/IODS-project")
 # Write results to .csv format file
 write.csv2(df,"Data/learning2014.csv")
 # Read saved .csv file. Header= TRUE means that file has headers. sep=";" means that values are separated by ;. dec="," means that in the file ',' has been used for decimals
