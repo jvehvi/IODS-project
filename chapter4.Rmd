@@ -21,20 +21,20 @@ The Boston Dataset
 
 The Boston Housing Dataset is a derived from information collected by the U.S. Census Service concerning housing in the area of Boston MA. The Boston data frame has 506 rows and 14 columns. The following describes the dataset columns:
 
-*    CRIM - per capita crime rate by town
-*    ZN - proportion of residential land zoned for lots over 25,000 sq.ft.
-*    INDUS - proportion of non-retail business acres per town.
-*    CHAS - Charles River dummy variable (1 if tract bounds river; 0 otherwise)
-*    NOX - nitric oxides concentration (parts per 10 million)
-*    RM - average number of rooms per dwelling
+*   CRIM - per capita crime rate by town
+*   ZN - proportion of residential land zoned for lots over 25,000 sq.ft.
+*   INDUS - proportion of non-retail business acres per town.
+*   CHAS - Charles River dummy variable (1 if tract bounds river; 0 otherwise)
+*   NOX - nitric oxides concentration (parts per 10 million)
+*   RM - average number of rooms per dwelling
 *   AGE - proportion of owner-occupied units built prior to 1940
 *   DIS - weighted distances to five Boston employment centres*
-*    RAD - index of accessibility to radial highways
-*    TAX - full-value property-tax rate per $10,000
-*    PTRATIO - pupil-teacher ratio by town
-*    B - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
-*    LSTAT - % lower status of the population
- *   MEDV - Median value of owner-occupied homes in $1000's
+*   RAD - index of accessibility to radial highways
+*   TAX - full-value property-tax rate per $10,000
+*   PTRATIO - pupil-teacher ratio by town
+*   B - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
+*   LSTAT - % lower status of the population
+ *  MEDV - Median value of owner-occupied homes in $1000's
 
 ## Summary and graphical overview of the data
 ```{r Summary, echo=FALSE}
@@ -70,12 +70,15 @@ ggplot(bosmelt, aes(x=value, y=crim))+
 corrmatrix <- cor(Boston)
 corrmatrix
 ## Visualization
-corrplot(corrmatrix, method="circle")
+corrplot(corrmatrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6, type = "upper")
 ```
+There are 506 different observations for 14 variables whivh summaries informations concerning housing in the area of Boston Mass. By using this dataset, we can try to find out different relationships between variables. E.g. per capita crime rate  relationship to other variables is very interesting. If we could find out variables which has the most effect to it, could in future try to effect these variables and in advance reduce develop of crime rate when planning new residential areas.
+From the summary table, we can see that not all information from variables are easy or wise to use as a predictors in same model as those are now. E.g. "proportion of residential land zoned for lots over 25,000 sq.ft." (zn) - variable observations are unevenly distributed where as "pupil-teacher ratio by town" (ptratio) - variable observations are much more evenly distributed.
+But interesting is that when we plot other variables against crime rate, we can see that there could be correlation even that the distribution wouldn't be so clear.
+From the correlation matrix,  we can see that there are some kind positive or negative correlation with per capita crime rate and other variables. Six variables have negative correlation and seven have positive. Most less negative correlation is with "Charles River dummy variable (1 if tract bounds river; 0 otherwise)" (chas) and overall negative correlate factors impact seems to be low. Positively correlate factors impact seems to be much higher and "index of accessibility to radial highways" (rad) -  and "full-value property-tax rate per $10,000" (tax) seems to have the most positive correlation  to per capita crime rate. Same results are visualized in the plot where conclusions can be made more easily.
 
 ## Standardize the dataset
-
-You can also embed plots, for example:
+To get more clear understanding about the data and make it usable in prediction model, it has to be standardized. To do that, we scale and center the columns of a numeric matrix. Centering is done by subtracting the column means (omitting NAs) of x from their corresponding columns. Scaling is done by dividing the (centered) columns of x by their standard deviations.  
 
 ```{r Standardise, echo=FALSE}
 # Check head of original data to compare scaled data
@@ -91,6 +94,29 @@ summary(boston_scaled[,'crim'])
 
 # class of the boston_scaled object
 class(boston_scaled)
+
+# Inspect how values has changed 
+# Check summary of data
+summary(boston_scaled)
+
+# Visualize data for inspecting
+## Scatterplot
+ggpairs(boston_scaled, mapping = aes(), lower =list(combo = wrap("facethist", bins = 20))) 
+
+## All variables against crim rate
+bosmelt <- melt(boston_scaled, id="crim")
+ggplot(bosmelt, aes(x=value, y=crim))+
+  facet_wrap(~variable, scales="free")+
+  geom_point()
+
+# Correlation matrix and visualization
+## Matrix
+corrmatrix <- cor(boston_scaled)
+corrmatrix
+## Visualization
+corrplot(corrmatrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6, type = "upper")
+```
+After scaling we can see that values across different variables are much more near each others. From the correlation matrix, we see that we got same results as with raw values. 
 
 # create a quantile vector of crim and print it
 bins <- quantile(boston_scaled[['crim']])
@@ -145,13 +171,27 @@ correct_classes <- test$crime
 test <- dplyr::select(test, -crime)
 head(test)
 ```
+Now we have build up test and training data by selecting randomly first 80 % off data as a training set and using 20 % as a test set. Both data set will be used in next part. 
 
-
-## Fit the linear discriminant analysis on the train se
+## Fit the linear discriminant analysis on the train set
 
 * Crime rate as the target variable and all the other variables in the dataset as predictor variables.
 
-```{r Model, echo=TRUE}
+Now we use training set in linear discriminat analysis. The function tries hard to detect if the within-class covariance matrix is singular. If any variable has within-group variance less than 'tolerance to decide'^2 it will stop and report the variable as constant. As a return function gives:
+
+*prior - the prior probabilities used.
+
+*means - the group means.
+
+*scaling - a matrix which transforms observations to discriminant functions, normalized so that within groups covariance matrix is spherical.
+
+*svd - the singular values, which give the ratio of the between- and within-group standard deviations on the linear discriminant variables. Their squares are the canonical F-statistics.
+
+*N - The number of observations used.
+
+*call	- The (matched) function call.
+
+```{r Modelli, echo=TRUE}
 # linear discriminant analysis
 lda.fit <- lda(crime ~., data = train)
 
@@ -175,19 +215,29 @@ classes <- as.numeric(train$crime)
 plot(lda.fit, dimen = 2) +
   lda.arrows(lda.fit, myscale = 1)
 ```
-
+From the results plot we can see that rad seems to most driving variable in our training set for explaining LD1. And from the result object we can see that it has most positive coefficient 3.62727 to LD1 whereas second most effective variable seems to be nox with only 0.307. For the LD2, zn has highest positive coefficient 0.624225492.
 ## Predict the classes with the LDA model on the test data
 
 ```{r, echo=FALSE}
 # predict classes with test data
 lda.pred <- predict(lda.fit, newdata = test)
+lda.pred
+
+# Define a loss function (mean prediction error)
+calc_class_err <- function(actual, predicted) {
+  mean(actual != predicted)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+calc_class_err(actual = correct_classes, predicted = lda.pred$class)
 
 # cross tabulate the results
 table(correct = correct_classes, predicted = lda.pred$class)
 ```
+The results shows as that the high and low variable groups are grouped much better to rigth classes compared to med_high and med_low groups. Overall our error rate is 34,31 % which is pretty high and could be better.
 
 ## Reload the Boston dataset and standardize the dataset 
-
+To get better error rate we can try to do standardise our data set b y using distances.
 * Scale all variables to have mean = 0 and standard deviation = 1
 ```{r Scale}
 # Bring data to R
@@ -244,3 +294,20 @@ pairs(Boston[11:ncol(Boston)], col = km$cluster)
 Distances in Manhattan method are longer. Two clusters seems to be best.
 
 ## Bonus: k-means on the original Boston data with 5 clusters
+## SuperBonus 
+ 
+```{r Scale}
+model_predictors <- dplyr::select(train, -crime)
+
+# check the dimensions
+dim(model_predictors)
+dim(lda.fit$scaling)
+
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+
+# Next, install and access the plotly package. Create a 3D plot (cool!) of the columns of the matrix product using the code below.
+
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers')
+```

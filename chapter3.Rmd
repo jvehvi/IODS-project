@@ -57,7 +57,7 @@ p <- ggpairs(wrangled_student_mat_por[int_variables], mapping = aes(), lower =li
 p
 ```
 
-Results shows that there seems to be somekind of relationship atleast between alchol and freetime, - studytime and age. POsitive correlation can be seem between alcohol use and freetime. Negative correlation between alcohol use and study time, and alcohol use and age. Intresting find out is that young persons (15-18) seems to drink more than ages 19 -21.
+Results shows that there seems to be some kind of relationship at least between alchol and freetime, - studytime and age. POsitive correlation can be seem between alcohol use and freetime. Negative correlation between alcohol use and study time, and alcohol use and age. Intresting find out is that young persons (15-18) seems to drink more than ages 19 -21.
 
 ## Logistic regression
 
@@ -246,7 +246,7 @@ a
 
 
 In the plot, test - and training errors against 'Number of prediction variables in model' are shown with own lines. I have selected ten variables which might have effect to alcohol consumption. 
-Typically, training error is which is less than test error indicates that model over fits to the training data. The model can be think to be good enough when test and training errors are near each other.
+Typically, training error which is less than test error indicates that model over fits to the training data. The model can be think to be good enough when test and training errors are near each other.
 E.g. from the plot, can be see that training error first rise in range 10-8 and in same range test error is lower and remains almost unchanged. Over fitting can be seen with range 7-5 and 3-1. When we have four variables in our model, test and training error are near each others indicating goodness of our model. And this results, seems to change depending how data is divided to test and training sets.
 According these results, the logistic regression model with four variables seems to be good if selected variables are good. Different grouping for selected variables should be also performed to catch out which four variables would be the best ones.
 
