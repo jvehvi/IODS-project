@@ -13,7 +13,7 @@ This week topic was Regression and model validation. Here we present basic R com
 
 ```{r}
 # Set up workind dir
-setwd("D:/IODS-project") 
+setwd("E:/Open science course 2022/IODS-project") 
 dir.create(paste0(getwd(),"/Data"))
 setwd(paste0(getwd(),"/Data"))
 ```
@@ -64,7 +64,7 @@ df$Attitude<-rowMeans(analy_dataset[,colnames(analy_dataset) %in% attitude], na.
 
 ```{r}
 # Change working dir
-setwd("D:/IODS-project")
+setwd("E:/Open science course 2022/IODS-project")
 # Write results to .csv format file
 write.csv2(df,"Data/learning2014.csv")
 # Read saved .csv file. Header= TRUE means that file has headers. sep=";" means that values are separated by ;. dec="," means that in the file ',' has been used for decimals

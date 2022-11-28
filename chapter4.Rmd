@@ -80,7 +80,7 @@ From the correlation matrix,  we can see that there are some kind positive or ne
 ## Standardize the dataset
 To get more clear understanding about the data and make it usable in prediction model, it has to be standardized. To do that, we scale and center the columns of a numeric matrix. Centering is done by subtracting the column means (omitting NAs) of x from their corresponding columns. Scaling is done by dividing the (centered) columns of x by their standard deviations.  
 
-```{r Standardise, echo=FALSE}
+```{r Stand, echo=FALSE}
 # Check head of original data to compare scaled data
 data("Boston")
 head(Boston)
@@ -118,6 +118,7 @@ corrplot(corrmatrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6, 
 ```
 After scaling we can see that values across different variables are much more near each others. From the correlation matrix, we see that we got same results as with raw values. 
 
+```{r Build_crime, echo=FALSE}
 # create a quantile vector of crim and print it
 bins <- quantile(boston_scaled[['crim']])
 bins
@@ -151,6 +152,7 @@ boston_scaled <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/H
 # Change 'crime' to factor variable with relevant levels
 boston_scaled$crime <- factor(boston_scaled$crime, levels = c("low", "med_low", "med_high", "high"))
 
+# Build up test and train datasets
 # number of rows in the Boston dataset 
 n <- nrow(boston_scaled)
 
@@ -218,7 +220,7 @@ plot(lda.fit, dimen = 2) +
 From the results plot we can see that rad seems to most driving variable in our training set for explaining LD1. And from the result object we can see that it has most positive coefficient 3.62727 to LD1 whereas second most effective variable seems to be nox with only 0.307. For the LD2, zn has highest positive coefficient 0.624225492.
 ## Predict the classes with the LDA model on the test data
 
-```{r, echo=FALSE}
+```{r LDA Model, echo=FALSE}
 # predict classes with test data
 lda.pred <- predict(lda.fit, newdata = test)
 lda.pred
@@ -234,10 +236,10 @@ calc_class_err(actual = correct_classes, predicted = lda.pred$class)
 # cross tabulate the results
 table(correct = correct_classes, predicted = lda.pred$class)
 ```
-The results shows as that the high and low variable groups are grouped much better to rigth classes compared to med_high and med_low groups. Overall our error rate is 34,31 % which is pretty high and could be better.
+The results shows as that the high and low variable groups are grouped much better to rigth classes compared to med_high and med_low groups. Overall our error rate is still around 33 % depending how observations are divided to train and test data. This is pretty high and could be better.
 
 ## Reload the Boston dataset and standardize the dataset 
-To get better error rate we can try to do standardise our data set b y using distances.
+To get better error rate we can try to do standardise our data set by using distances.
 * Scale all variables to have mean = 0 and standard deviation = 1
 ```{r Scale}
 # Bring data to R
@@ -268,6 +270,9 @@ km <- kmeans(Boston, centers = 4)
 # plot the Boston dataset with clusters
 pairs(Boston, col = km$cluster)
 
+# Summary of clusters
+summary(km$cluster)
+
 # K-means clustering, center 3
 km <- kmeans(Boston, centers = 3)
 # plot the Boston dataset with clusters
@@ -275,6 +280,8 @@ pairs(Boston[1:5], col = km$cluster)
 pairs(Boston[6:10], col = km$cluster)
 pairs(Boston[11:ncol(Boston)], col = km$cluster)
 
+# Summary of clusters
+summary(km$cluster)
 
 # K-means clustering, center 2
 km <- kmeans(Boston, centers = 2)
@@ -283,20 +290,163 @@ pairs(Boston[1:5], col = km$cluster)
 pairs(Boston[6:10], col = km$cluster)
 pairs(Boston[11:ncol(Boston)], col = km$cluster)
 
-# K-means clustering, center 1
-km <- kmeans(Boston, centers = 1)
+# Summary of clusters
+summary(km$cluster)
+
+# K-means clustering, center 2
+km <- kmeans(Boston, centers = 5)
 # plot the Boston dataset with clusters
 pairs(Boston[1:5], col = km$cluster)
 pairs(Boston[6:10], col = km$cluster)
 pairs(Boston[11:ncol(Boston)], col = km$cluster)
+
+# Summary of clusters
+summary(km$cluster)
+
+# K-means clustering, center 2
+km <- kmeans(Boston, centers = 6)
+# plot the Boston dataset with clusters
+pairs(Boston[1:5], col = km$cluster)
+pairs(Boston[6:10], col = km$cluster)
+pairs(Boston[11:ncol(Boston)], col = km$cluster)
+
+# Summary of clusters
+summary(km$cluster)
+
 ```
 
-Distances in Manhattan method are longer. Two clusters seems to be best.
+From the summaries, we can see that distances between used method differs quite much qiven longer distances by Manhattan method.
+Euclidean distance is the shortest path between source and destination. Manhattan distance is sum of all the real distances between source and destination.  Two clusters seems to be best.
+By using center 4, number of cluster range between 1-4, and 2 seems to be the most common.
+When studying by setting higher value for center, 4 cluster seems to be most common choice. So, it seems to be hard to use summary as a only way to select good number of clusters. But from the plots we can see that 4 clusters could be presented in the data, but even that atleast 2 and 3 clusters should be also tried.
 
-## Bonus: k-means on the original Boston data with 5 clusters
+## Bonus: k-means on the original Boston data with 3 clusters
+
+```{r Bonus}
+data(Boston)
+# Standaridise data
+standardised_boston <- as.data.frame(Boston %>%mutate_all(~(scale(.) %>% as.vector)))
+
+# K-means clustering, center 3
+km <- kmeans(standardised_boston, centers = 3)
+# plot the Boston dataset with clusters
+pairs(standardised_boston[1:5], col = km$cluster)
+pairs(standardised_boston[6:10], col = km$cluster)
+pairs(standardised_boston[11:ncol(standardised_boston)], col = km$cluster)
+
+# Summary of clusters
+summary(km$cluster)
+
+standardised_boston$N_clusters <- factor(km$cluster)
+
+# Build up test and train datasets
+# choose randomly 80% of the rows
+ind <- sample(nrow(standardised_boston),  size = n * 0.8)
+
+# create train set
+train <- standardised_boston[ind,]
+dim(train)
+# create test set 
+test <- standardised_boston[-ind,]
+dim(test)
+
+# save the 'correct' clusters from test data
+correct_classes <- test$N_clusters
+
+# remove the N_clusters variable from test data
+test <- dplyr::select(test, -N_clusters)
+head(test)
+
+# linear discriminant analysis
+lda.fit <- lda(N_clusters ~., data = train)
+
+# print the lda.fit object
+lda.fit
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$N_clusters)
+
+# plot the lda results
+plot(lda.fit, dimen = 2) +
+  lda.arrows(lda.fit, myscale = 1)
+
+```
+Plot of the LDA results shows that tax and rad has most effect to LD1 and age for LD2, and even so are the most influential linear separators for the clusters.
+
 ## SuperBonus 
  
-```{r Scale}
+```{r SuperBonus}
+
+
+# Add crime factor to data set scaled in last code chunk
+
+# create a quantile vector of crim and print it
+bins <- quantile(standardised_boston[['crim']])
+bins
+
+# create a categorical variable 'crime'
+crime <- cut(standardised_boston[['crim']], breaks = bins, include.lowest = TRUE)
+
+# remove original crim from the dataset
+standardised_boston <- dplyr::select(standardised_boston, -crim)
+
+# add the new categorical value to scaled data
+standardised_boston <- data.frame(standardised_boston, crime)
+
+# Set crime to character fow a while 
+standardised_boston$crime<-as.character(standardised_boston$crime)
+
+# Set 'crime' to factor variable, and give relevant levels
+standardised_boston$crime[standardised_boston$crime=="[-0.419,-0.411]"] <- "low"
+standardised_boston$crime[standardised_boston$crime=="(-0.411,-0.39]"] <- "med_low"
+standardised_boston$crime[standardised_boston$crime=="(-0.39,0.00739]"] <- "med_high"
+standardised_boston$crime[standardised_boston$crime=="(0.00739,9.92]"] <- "high"
+# back to factor with correct levels
+standardised_boston$crime<- factor(standardised_boston$crime, levels = c("low", "med_low", "med_high", "high"))
+
+# Check head of edited table
+head(standardised_boston)
+
+
+# Build up test and train datasets
+
+# choose randomly 80% of the rows
+ind <- sample(nrow(standardised_boston),  size = n * 0.8)
+
+# create train set
+train <- standardised_boston[ind,]
+dim(train)
+# create test set
+test <- standardised_boston[-ind,]
+dim(test)
+
+# Save n_cluster column
+n_clusterit<- train$N_clusters
+
+# remove original n_cluster from the dataset
+train <- dplyr::select(train, -N_clusters)
+
+# linear discriminant analysis
+lda.fit <- lda(crime ~., data = train)
+
+# print the lda.fit object
+lda.fit
+
+# Collect crime variables
+target<- factor(train$crime)
+
+
+# Collect predictor data
 model_predictors <- dplyr::select(train, -crime)
 
 # check the dimensions
@@ -307,7 +457,10 @@ dim(lda.fit$scaling)
 matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
 matrix_product <- as.data.frame(matrix_product)
 
-# Next, install and access the plotly package. Create a 3D plot (cool!) of the columns of the matrix product using the code below.
+# Next, access the plotly package. Create a 3D plot of the columns of the matrix.
+library(plotly)
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=target)
 
-plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers')
+# Let's colorcode clusters
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=n_clusterit)
 ```
