@@ -20,7 +20,7 @@ setwd(paste0(getwd(),"/Data"))
 
 ### PART 2
 Bring .txt file to R environment which has been downloaded to Data - folder.
-```{r}
+```{r, echo=FALSE}
 learning_2014<-as.data.frame(read.table("Data/learning2014.txt", header = TRUE, sep = "\t"))
 ```
 
@@ -34,7 +34,7 @@ Table should have 183 rows and 60 cols containing integer values in all except l
 * Stra is calculated by taking the mean of cols: c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28") and excluding 0.
 * Surf is calculated by taking the mean of cols: c("SU02","SU10","SU18","SU26","SU05","SU13","SU21","SU29","SU08","SU16","SU24","SU32") and excluding 0.
 
-```{r}
+```{r, echo=FALSE}
 # Remove rows which have 0 in Points
 analy_dataset<-subset(learning_2014, as.numeric(Points)!=0)
 analy_dataset[analy_dataset==0]<-NA
@@ -62,7 +62,7 @@ df$Attitude<-rowMeans(analy_dataset[,colnames(analy_dataset) %in% attitude], na.
 
 ### PART 4
 
-```{r}
+```{r, echo=FALSE}
 # Change working dir
 setwd("E:/Open science course 2022/IODS-project")
 # Write results to .csv format file
@@ -77,7 +77,7 @@ learning_2014.2<-as.data.frame(read.table("Data/learning2014.csv", header = TRUE
 
 Data set contains summary results of course 'Johdatus yhteiskuntatilastotieteeseen, syksy 2014' survey. There should be 7 variables (gender, age, attitude, deep, stra, surf and points) and 166 observations.''' Gender: Male = 1 Female = 2 Age: Age (in years) derived from the date of birth Attitude: Global attitude toward statistics. Mean of original variables (\~Da+Db+Dc+Dd+De+Df+Dg+Dh+Di+Dj) Deep: Deep approach. Mean of original variables (\~d_sm+d_ri+d_ue) Stra: Strategic approach. Mean of original variables ( \~st_os+st_tm) Surf: Surface approach. Mean of original variables (\~su_lp+su_um+su_sb) Points: Total counts from survey. More information about used variables can be found from <http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt>'''
 
-```{r}
+```{r, echo=FALSE}
 # Read file to R environment
 learning_2014.2<-as.data.frame(read.table("Data/learning2014.csv", header = TRUE, sep = ";", dec=","))
 # Check dimensions of read table
@@ -88,7 +88,7 @@ dim(learning_2014.2)
 
 By commend summary we can take a look 'inside' the data. By the command we get 'boxplot information' about our numerical data in dataframe. Scatterplot matrix is used to describe relationships between the variables. It's constructed from the dataframe with ggpairs -function (ggplot2 -package). Result plot shows, in addition of variables relationships, variables diverging and gives correlation coefficients with asterix showing level of significance.
 
-```{r}
+```{r, echo=FALSE}
 # Summary
 library(ggplot2)
 library(GGally)
@@ -105,14 +105,14 @@ There seems to be also some kind of relationship between: Stra and Surf. As over
 
 Create a regression model with multiple explanatory variables
 
-```{r}
+```{r, echo=FALSE}
 my_model2 <- lm(Points ~ Attitude + Stra + Surf, data = learning_2014.2)
 summary(my_model2)
 ```
 
 Summary of a regression model shows that only Attitude seems to correlate significantly with Points. From the print, you can see model residiuals; summary table (estimate value, std. error, t-value and p-value for all variables in model against Points). Significance of variable correlation can be read from p-value(last column of Coefficients table). Significance levels threshols are given under the table. Summary gives also p-value for whole model which isn't significant because model contains variables that hasn't have relationship to Points. In next step, lest remove other variables from the model and see what happens
 
-```{r}
+```{r, echo=FALSE}
 # Only Attitude seems to be significant, so lets do model again with only adding it
 my_model3 <- lm(Points ~ Attitude, data = learning_2014.2)
 summary(my_model3)
@@ -122,7 +122,7 @@ Now results seems to be better and p-value is significant for the variable relat
 
 ### PART 5 - Study more our model with diagnostic plots
 
-```{r}
+```{r, echo=FALSE}
 plot(my_model3, which=c(1,2,5))
 ```
 

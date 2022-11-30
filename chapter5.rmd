@@ -5,8 +5,8 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup_week5, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 # 5: Dimensionality reduction techniques
@@ -38,6 +38,7 @@ There is still some editing e.g. Gender Inequality Index could be also shortened
 # Read file to R-environment
 human_data<-read.table("human_data.tsv", header=TRUE, sep=";", dec=",")
 
+
 # EDIT Gender Inequality Index column
 colnames(human_data)[colnames(human_data)=="Gender Inequality Index"]<-"GII"
 
@@ -45,8 +46,8 @@ colnames(human_data)[colnames(human_data)=="Gender Inequality Index"]<-"GII"
 library(dplyr)
 
 # Change GNI col to numeric by mutate
-human_data %>%
-  select(GNI) %>%
+human_data$GNI<-human_data %>%
+  dplyr:::select(GNI) %>%
   mutate(GNI =as.numeric(GNI))
 
 # Exclude unneeded variables
@@ -59,7 +60,7 @@ dim(human_data.subset)
 
 # Seems that there isn't any complete NA rows
 # Lets' remove rows that contains even one NA
-human_data.subset<-human_data.subset[complete.cases(human_data.subset), ]
+human_data.subset<-human_data.subset[complete.cases(as.matrix(human_data.subset)), ]
 dim(human_data.subset)
 
 # After subsetting there are 162/195 observations which haven't had any missing variables
@@ -77,7 +78,6 @@ human_data.subset <- subset(human_data.subset, !(Country %in% regions))
 
 # We can check by dimensions and unique values that correct rows has been removed
 dim(human_data.subset)
-unique(human_data.subset$Country)
 
 # add country to rownames
 rownames(human_data.subset) <- human_data.subset$Country
@@ -90,12 +90,163 @@ dim(human_data.subset)
 write.csv2(human_data.subset, "human_data_30112022.tsv", row.names=TRUE)
 ```
 
-## Including Plots
+## Analysis
 
-You can also embed plots, for example:
+This week topic is Dimensionality reduction techniques.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+### Summary of the data
+```{r Summary_of_Data, echo=FALSE}
+# Libraries
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(MASS)
+library(ggplot2)
+library(GGally)
+library(reshape2)
+library(tidyr)
+library(corrplot)
+library(factoextra)
+library(FactoMineR)
+
+# Let's try new package for producion of summary table and plot of the data
+library(modelsummary)
+
+# head of data
+head(human_data.subset)
+
+# Summary of the Human Data
+datasummary_skim(human_data.subset)
+
+# Summary plot
+## Scatterplot
+ggpairs(human_data.subset, mapping = aes(), lower =list(combo = wrap("facethist", bins = 20))) 
+
+# Correlation plot
+datasummary_correlation(human_data.subset)
+```
+There are differences between variables in value scale and distributions. E.g. our new variables has information combined from to column showing ratios, GNI has highest values and highest range. Overall, values difference from 0 to 123124 meaning that some sort of scaling and normalization should be done to make different variables to be comparable.
+
+### PCA raw data
+
+Principal component analysis (PCA) is a popular technique for analyzing large datasets containing a high number of dimensions/features per observation, increasing the interpretability of data while preserving the maximum amount of information, and enabling the visualization of multidimensional data. Formally, PCA is a statistical technique for reducing the dimensionality of a dataset. This is accomplished by linearly transforming the data into a new coordinate system where (most of) the variation in the data can be described with fewer dimensions than the initial data. (wikipedia)
+```{r PCA raw data, echo=FALSE}
+
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human_data.subset)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+From the plot, we can't see much or use it like that for good interpretation. As far, we can say that GNI seems to influence PC1.
+
+### PCA standardized data
+```{r scale_pca, echo=FALSE}
+
+# standardize the variables
+human_std <- scale(human_data.subset)
+
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human_std)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+
+```
+
+
+After scaling we can see much better different variables. Edu.Exp, Life.Exp, Labb,FM and GNI influence to PC1 forming a group as well as Mat.Mor and Ado.Birth which influence is opposite and forms a group which have similar influence to PC1. Let's read a plot e.g. we can see that Niger and Sierra Leone has high Mat.Mor and Ado.Birth	and low GNI, Labo.FM, Life.Exp and Edu.Exp. This sounds realistic. And variables values in scale for e.g Japan, Korea and Czech are opposite (on the other side of mean/median).  
+There could be also negative correlation with these groups, and inside group positive correlation with variables. This could be study more but we can validate this from ealier build summary plots where correlation values can be read.
+Overall, we can see that these group formed from similarly influencing variables divide our countries to groups which have same level 'standard of living'.
+PC2 is influenced by Padi.F and Edu2.FM which have also positive correlation to each other. It shows that countries e.g. Bolivia, Rwanda and Namibia seems to have similar level education between gender and it positivily correlates with Percetange of female representatives in parliament. As opposite, e.g Jordan has high difference between genders education level and also Percetange of female representatives in parliament level is low.
+
+
+### Multiple Correspondence Analysis (MCA)
+In statistics, multiple correspondence analysis (MCA) is a data analysis technique for nominal categorical data, used to detect and represent underlying structures in a data set. It does this by representing data as points in a low-dimensional Euclidean space. The procedure thus appears to be the counterpart of principal component analysis for categorical data. MCA can be viewed as an extension of simple correspondence analysis (CA) in that it is applicable to a large set of categorical variables.(wikipedia)
+```{r Tea_Time, echo=FALSE}
+
+
+# Bring Tea data
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+
+# Study data
+View(tea)
+# Dimensions
+dim(tea)
+# Colnames
+colnames(tea)
+# Summary
+summary(tea)
+
+# Summary plot
+# Let's visualize part of the data
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+## Scatterplot
+ggpairs(tea[,colnames(tea) %in% keep_columns], mapping = aes(), lower =list(combo = wrap("facethist", bins = 20))) 
+
+keep_columns_2<- c("price","Tea")
+# Mosaic plot of couple variables
+mosaicplot(table(tea[,colnames(tea) %in% keep_columns_2]), xlab='Tea', ylab='Price',main='Tea and price', col='blue')
+
+# Age has to be factorized by bins or removed --> remove
+tea<-tea[!(colnames(tea) %in% 'age')]
+
+# Multiple Correspondence Analysis (MCA)
+# set to vizualize also the correlation between variables and MCA principal dimension
+res.mca<- MCA(tea, graph = TRUE)
+
+# Extract and save results for later use
+var <- get_mca_var(res.mca)
+var
+# Coordinates
+head(var$coord)
+# Cos2: quality on the factore map
+head(var$cos2)
+# Contributions to the principal components
+head(var$contrib)     
+
+# visualize MCA - many possibilites
+# MCA factor map
+plot(res.mca, invisible=c("ind"), graph.type = "classic")
+
+
+# Eigenvalues/Variances
+# get values
+eig.val <- get_eigenvalue(res.mca)
+head(eig.val)
+# Build plot
+# Shows how much first ten dimension of data explains it"
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+
+
+# Biplot
+# The plot above shows a global pattern within the data. Rows (individuals) are represented by blue points and columns (variable categories) by red triangles.
+
+# The distance between any row points or column points gives a measure of their similarity (or dissimilarity). Row points with similar profile are closed on the factor map. The same holds true for column points.
+fviz_mca_biplot(res.mca, 
+               repel = TRUE,
+               ggtheme = theme_minimal())
+
+
+
+# Cos2
+# The quality of the representation is called the squared cosine (cos2), which measures the degree of association between variable categories and a particular axis. 
+
+# Color by cos2 values: quality on the factor map
+fviz_mca_var(res.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+# Contribution of variable categories to the dimensions 1-2
+fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
+# The red dashed line on the graph above indicates the expected average value, If the contributions were uniform.
+fviz_mca_var(res.mca, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # avoid text overlapping (slow)
+             ggtheme = theme_minimal()
+             )
+# The plot above gives an idea of what pole of the dimensions the categories are actually contributing to. 

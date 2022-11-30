@@ -241,7 +241,7 @@ The results shows as that the high and low variable groups are grouped much bett
 ## Reload the Boston dataset and standardize the dataset 
 To get better error rate we can try to do standardise our data set by using distances.
 * Scale all variables to have mean = 0 and standard deviation = 1
-```{r Scale}
+```{r Scale, echo=FALSE}
 # Bring data to R
 library(MASS)
 library(dplyr)
@@ -322,7 +322,7 @@ When studying by setting higher value for center, 4 cluster seems to be most com
 
 ## Bonus: k-means on the original Boston data with 3 clusters
 
-```{r Bonus}
+```{r Bonus, echo=FALSE}
 data(Boston)
 # Standaridise data
 standardised_boston <- as.data.frame(Boston %>%mutate_all(~(scale(.) %>% as.vector)))
@@ -385,7 +385,7 @@ Plot of the LDA results shows that tax and rad has most effect to LD1 and age fo
 
 ## SuperBonus 
  
-```{r SuperBonus}
+```{r SuperBonus, echo=FALSE}
 
 
 # Add crime factor to data set scaled in last code chunk
