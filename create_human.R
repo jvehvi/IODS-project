@@ -58,11 +58,11 @@ colnames(gii)<- gsub(x = colnames(gii), pattern = remove_one, replacement = "")
 # Things to be replaced)
   
 catch=c("Gross National Income per Capita", "Life Expectancy at Birth", "Expected Years of Education",
-        "Mean Years of Education", "Maternal mortality ratio", "Adolescent Birth Rate","Human Development Index",
+        "Mean Years of Education", "Maternal Mortality Ratio", "Adolescent Birth Rate","Human Development Index",
         "Percent Representation in Parliament","per Capita Rank Minus")
   
 # Replacers 
-change=c("GNI","Life.Exp","Edu.Exp","Edu.Mean","Mat.Mor","Ado.Birth","HDI","Parli"," - ") 
+change=c("GNI","Life.Exp","Edu.Exp","Edu.Mean","Mat.Mor","Ado.Birth","HDI","Parli.F"," - ") 
 
 # Then loop with two vectors
 for (i in 1:length(catch)) {
@@ -77,3 +77,5 @@ gii<- mutate(gii, Labo.FM = Labo.F / Labo.M)
 head(as.data.frame(gii))
 
 df <- merge(hd, gii, by="Country")
+
+write.csv2(df, "human_data.tsv")

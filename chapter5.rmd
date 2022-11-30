@@ -1,0 +1,101 @@
+---
+title: '5: Dimensionality reduction techniques'
+author: "Jussi Vehviläinen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 5: Dimensionality reduction techniques
+
+## Data wrangling
+
+Data wrangling was started in last week, and script can be found from file create_human.R. There should be 195 observations and 19 variables. Most of the variables names has been shortened and couple new variables added to the original dataset as follow:
+*   "GNI" = Gross National Income per capita
+*   "Life.Exp" = Life expectancy at birth
+*   "Edu.Exp" = Expected years of schooling 
+*   "Mat.Mor" = Maternal mortality ratio
+*   "Ado.Birth" = Adolescent birth rate
+
+
+*   "Parli.F" = Percetange of female representatives in parliament
+*   "Edu2.F" = Proportion of females with at least secondary education
+*   "Edu2.M" = Proportion of males with at least secondary education
+*   "Labo.F" = Proportion of females in the labour force
+*   "Labo.M" " Proportion of males in the labour force
+
+New variables
+*   "Edu2.FM" = Edu2.F / Edu2.M
+*   "Labo.FM" = Labo2.F / Labo2.M
+
+There is still some editing e.g. Gender Inequality Index could be also shortened to 'GII'. Lets' start wrangling by that.
+
+
+```{r data_wrangling}
+# Read file to R-environment
+human_data<-read.table("human_data.tsv", header=TRUE, sep=";", dec=",")
+
+# EDIT Gender Inequality Index column
+colnames(human_data)[colnames(human_data)=="Gender Inequality Index"]<-"GII"
+
+# Libraries
+library(dplyr)
+
+# Change GNI col to numeric by mutate
+human_data %>%
+  select(GNI) %>%
+  mutate(GNI =as.numeric(GNI))
+
+# Exclude unneeded variables
+keep <- c("Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
+human_data.subset <- human_data[,keep]
+
+# Remove rows with all NA
+human_data.subset<-human_data.subset[rowSums(is.na(human_data.subset))!= ncol(human_data.subset),]
+dim(human_data.subset)
+
+# Seems that there isn't any complete NA rows
+# Lets' remove rows that contains even one NA
+human_data.subset<-human_data.subset[complete.cases(human_data.subset), ]
+dim(human_data.subset)
+
+# After subsetting there are 162/195 observations which haven't had any missing variables
+
+# Next we should remove observations related to region
+# to find out which, unique values of Country column should be taken
+
+unique(human_data.subset$Country)
+
+# From the print:
+regions<-c("South Africa","South Asia","Latin America and the Caribbean","Europe and Central Asia","East Asia and the Pacific","World","Sub-Saharan Africa")
+
+# Subset regions from the human_data
+human_data.subset <- subset(human_data.subset, !(Country %in% regions))
+
+# We can check by dimensions and unique values that correct rows has been removed
+dim(human_data.subset)
+unique(human_data.subset$Country)
+
+# add country to rownames
+rownames(human_data.subset) <- human_data.subset$Country
+
+human_data.subset <- human_data.subset[,!(colnames(human_data.subset) %in% c('Country'))]
+
+# Check dimensions, should be 155 x 8
+dim(human_data.subset)
+
+write.csv2(human_data.subset, "human_data_30112022.tsv", row.names=TRUE)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
