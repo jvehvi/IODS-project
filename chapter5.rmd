@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup_week5, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # 5: Dimensionality reduction techniques
@@ -50,9 +50,14 @@ human_data$GNI<-human_data %>%
   dplyr:::select(GNI) %>%
   mutate(GNI =as.numeric(GNI))
 
+
 # Exclude unneeded variables
 keep <- c("Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
 human_data.subset <- human_data[,keep]
+
+# Editing previous way 'GNI' make the column to class 'dataframe'. This would be problematic in plots
+# so lets' changed it back to really numeric
+human_data.subset$GNI<-as.numeric(unlist(human_data.subset$GNI))
 
 # Remove rows with all NA
 human_data.subset<-human_data.subset[rowSums(is.na(human_data.subset))!= ncol(human_data.subset),]
@@ -95,7 +100,7 @@ write.csv2(human_data.subset, "human_data_30112022.tsv", row.names=TRUE)
 This week topic is Dimensionality reduction techniques.
 
 ### Summary of the data
-```{r Summary_of_Data, echo=FALSE}
+```{r Summary_of_Data, echo=TRUE}
 # Libraries
 library(tidyverse)
 library(rstatix)
@@ -130,7 +135,7 @@ There are differences between variables in value scale and distributions. E.g. o
 ### PCA raw data
 
 Principal component analysis (PCA) is a popular technique for analyzing large datasets containing a high number of dimensions/features per observation, increasing the interpretability of data while preserving the maximum amount of information, and enabling the visualization of multidimensional data. Formally, PCA is a statistical technique for reducing the dimensionality of a dataset. This is accomplished by linearly transforming the data into a new coordinate system where (most of) the variation in the data can be described with fewer dimensions than the initial data. (wikipedia)
-```{r PCA raw data, echo=FALSE}
+```{r PCA raw data, echo=TRUE}
 
 # perform principal component analysis (with the SVD method)
 pca_human <- prcomp(human_data.subset)
@@ -144,7 +149,7 @@ biplot(pca_human, choices = 1:2)
 From the plot, we can't see much or use it like that for good interpretation. As far, we can say that GNI seems to influence PC1.
 
 ### PCA standardized data
-```{r scale_pca, echo=FALSE}
+```{r scale_pca, echo=TRUE}
 
 # standardize the variables
 human_std <- scale(human_data.subset)
@@ -166,7 +171,7 @@ PC2 is influenced by Padi.F and Edu2.FM which have also positive correlation to 
 
 ### Multiple Correspondence Analysis (MCA)
 In statistics, multiple correspondence analysis (MCA) is a data analysis technique for nominal categorical data, used to detect and represent underlying structures in a data set. It does this by representing data as points in a low-dimensional Euclidean space. The procedure thus appears to be the counterpart of principal component analysis for categorical data. MCA can be viewed as an extension of simple correspondence analysis (CA) in that it is applicable to a large set of categorical variables.(wikipedia)
-```{r Tea_Time, echo=FALSE}
+```{r Tea_Time, echo=TRUE}
 
 
 # Bring Tea data
