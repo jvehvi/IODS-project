@@ -196,12 +196,10 @@ mosaicplot(table(tea[,colnames(tea) %in% keep_columns_2]), xlab='Tea', ylab='Pri
 tea<-tea[!(colnames(tea) %in% 'age')]
 
 # Multiple Correspondence Analysis (MCA)
-# set to vizualize also the correlation between variables and MCA principal dimension
-res.mca<- MCA(tea, graph = TRUE)
-# With so many variables the printed MCAfactor plots becomes harder to read. We can see that e.g tea shop and older age seems to have positive influence to dim 2 where as student positivily correlates with age group 15-24 and have negative influence to dim 2.
-#But by selecting less variables we might make better conclusions.
-# Let's use only 12 first and check if can we get better plots for inspecting.
-res.mca<- MCA(tea[,1:12], graph = TRUE)
+# Could be set to vizualize also the correlation between variables and MCA principal dimension
+res.mca<- MCA(tea, graph = FALSE)
+# With so many variables the printed MCAfactor plots becomes harder to read. 
+# The object of MCA can be used for many different kind of visualizations -->
 # Extract and save results for later use
 var <- get_mca_var(res.mca)
 var
@@ -213,44 +211,45 @@ head(var$cos2)
 head(var$contrib)     
 
 # visualize MCA - many possibilites
-# MCA factor map
-plot(res.mca, invisible=c("ind"), graph.type = "classic")
-
 
 # Eigenvalues/Variances
+# In linear algebra, an eigenvector or characteristic vector of a linear transformation is a nonzero vector that changes at most by a scalar factor when that linear transformation is applied to it. The corresponding eigenvalue, often denoted by λ \lambda , is the factor by which the eigenvector is scaled.
+# Geometrically, an eigenvector, corresponding to a real nonzero eigenvalue, points in a direction in which it is stretched by the transformation and the eigenvalue is the factor by which it is stretched. If the eigenvalue is negative, the direction is reversed.[1] Loosely speaking, in a multidimensional vector space, the eigenvector is not rotated.(wikipedia)
+
 # get values
 eig.val <- get_eigenvalue(res.mca)
+# Dataframe contains also variance % and cumalative variance %. Those can be used to visualize how much of yhre variance is explained by it dimensions e.g. in histplot
 head(eig.val)
+
 # Build plot
-# Shows how much first ten dimension of data explains it"
 fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
 
-
 # Biplot
-# The plot above shows a global pattern within the data. Rows (individuals) are represented by blue points and columns (variable categories) by red triangles.
-
+# The plot shows a global pattern within the data. Rows (individuals) are represented by blue points and columns (variable categories) by red triangles.
 # The distance between any row points or column points gives a measure of their similarity (or dissimilarity). Row points with similar profile are closed on the factor map. The same holds true for column points.
 fviz_mca_biplot(res.mca, 
                repel = TRUE,
                ggtheme = theme_minimal())
 
+# Contribution of variable categories to the dimensions 1-2
+# The red dashed line on the graph indicates the expected average value, If the contributions were uniform.
+fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
 
 
 # Cos2
 # The quality of the representation is called the squared cosine (cos2), which measures the degree of association between variable categories and a particular axis. 
-
 # Color by cos2 values: quality on the factor map
 fviz_mca_var(res.mca, col.var = "cos2",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
              repel = TRUE, # Avoid text overlapping
              ggtheme = theme_minimal())
-
-# Contribution of variable categories to the dimensions 1-2
-fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
-# The red dashed line on the graph above indicates the expected average value, If the contributions were uniform.
+# Contribution
+# The plot above gives an idea of what pole of the dimensions the categories are actually contributing to. 
+# Color by contribution values: quality on the factor map
 fviz_mca_var(res.mca, col.var = "contrib",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
              repel = TRUE, # avoid text overlapping (slow)
              ggtheme = theme_minimal()
              )
-# The plot above gives an idea of what pole of the dimensions the categories are actually contributing to. 
+
+# From the plots we can read many things and make assumptions and maybe even conclusions, but also more test for that should be done. We can see that e.g tea shop, none working and older age seems to have positive influence to dim 2 where as student which positively correlates with age group 15-24 have negative influence to dim 2. Could this indicate that there are age and civil status related difference in tea drinking habits? Also location where tea is drinked seems to correlate with lunch tea consumption according dim 1. Could this indicates that workers like to drink their lunch tea typically in pub, chain store+ tea shop and tearoom rater than in home?
