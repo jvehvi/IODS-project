@@ -73,7 +73,7 @@ dim(human_data.subset)
 # Next we should remove observations related to region
 # to find out which, unique values of Country column should be taken
 
-unique(human_data.subset$Country)
+paste(unique(human_data.subset$Country),collapse=', ')
 
 # From the print:
 regions<-c("South Africa","South Asia","Latin America and the Caribbean","Europe and Central Asia","East Asia and the Pacific","World","Sub-Saharan Africa")
@@ -163,7 +163,7 @@ biplot(pca_human, choices = 1:2)
 ```
 
 
-After scaling we can see much better different variables. Edu.Exp, Life.Exp, Labb,FM and GNI influence to PC1 forming a group as well as Mat.Mor and Ado.Birth which influence is opposite and forms a group which have similar influence to PC1. Let's read a plot e.g. we can see that Niger and Sierra Leone has high Mat.Mor and Ado.Birth	and low GNI, Labo.FM, Life.Exp and Edu.Exp. This sounds realistic. And variables values in scale for e.g Japan, Korea and Czech are opposite (on the other side of mean/median).  
+After scaling we can see much better different variables influence to PC1 and PC2. Edu.Exp, Life.Exp, Labb,FM and GNI influence to PC1 forming a group as well as Mat.Mor and Ado.Birth which influence is opposite and forms a group which have similar influence to PC1. Let's read a plot e.g. we can see that Niger and Sierra Leone has high Mat.Mor and Ado.Birth	and low GNI, Labo.FM, Life.Exp and Edu.Exp. This sounds realistic. And variables values in scale for e.g Japan, Korea and Czech are opposite (on the other side of mean/median).  
 There could be also negative correlation with these groups, and inside group positive correlation with variables. This could be study more but we can validate this from ealier build summary plots where correlation values can be read.
 Overall, we can see that these group formed from similarly influencing variables divide our countries to groups which have same level 'standard of living'.
 PC2 is influenced by Padi.F and Edu2.FM which have also positive correlation to each other. It shows that countries e.g. Bolivia, Rwanda and Namibia seems to have similar level education between gender and it positivily correlates with Percetange of female representatives in parliament. As opposite, e.g Jordan has high difference between genders education level and also Percetange of female representatives in parliament level is low.
@@ -188,10 +188,6 @@ summary(tea)
 
 # Summary plot
 # Let's visualize part of the data
-keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
-## Scatterplot
-ggpairs(tea[,colnames(tea) %in% keep_columns], mapping = aes(), lower =list(combo = wrap("facethist", bins = 20))) 
-
 keep_columns_2<- c("price","Tea")
 # Mosaic plot of couple variables
 mosaicplot(table(tea[,colnames(tea) %in% keep_columns_2]), xlab='Tea', ylab='Price',main='Tea and price', col='blue')
@@ -202,7 +198,10 @@ tea<-tea[!(colnames(tea) %in% 'age')]
 # Multiple Correspondence Analysis (MCA)
 # set to vizualize also the correlation between variables and MCA principal dimension
 res.mca<- MCA(tea, graph = TRUE)
-
+# With so many variables the printed MCAfactor plots becomes harder to read. We can see that e.g tea shop and older age seems to have positive influence to dim 2 where as student positivily correlates with age group 15-24 and have negative influence to dim 2.
+#But by selecting less variables we might make better conclusions.
+# Let's use only 12 first and check if can we get better plots for inspecting.
+res.mca<- MCA(tea[,1:12], graph = TRUE)
 # Extract and save results for later use
 var <- get_mca_var(res.mca)
 var

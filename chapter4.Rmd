@@ -37,7 +37,7 @@ The Boston Housing Dataset is a derived from information collected by the U.S. C
  *  MEDV - Median value of owner-occupied homes in $1000's
 
 ## Summary and graphical overview of the data
-```{r Summary, echo=FALSE}
+```{r Summary, echo=TRUE}
 # Bring needed libraries to R-environment
 library(MASS)
 library(ggplot2)
@@ -80,7 +80,7 @@ From the correlation matrix,  we can see that there are some kind positive or ne
 ## Standardize the dataset
 To get more clear understanding about the data and make it usable in prediction model, it has to be standardized. To do that, we scale and center the columns of a numeric matrix. Centering is done by subtracting the column means (omitting NAs) of x from their corresponding columns. Scaling is done by dividing the (centered) columns of x by their standard deviations.  
 
-```{r Stand, echo=FALSE}
+```{r Stand, echo=TRUE}
 # Check head of original data to compare scaled data
 data("Boston")
 head(Boston)
@@ -118,7 +118,7 @@ corrplot(corrmatrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6, 
 ```
 After scaling we can see that values across different variables are much more near each others. From the correlation matrix, we see that we got same results as with raw values. 
 
-```{r Build_crime, echo=FALSE}
+```{r Build_crime, echo=TRUE}
 # create a quantile vector of crim and print it
 bins <- quantile(boston_scaled[['crim']])
 bins
@@ -220,7 +220,7 @@ plot(lda.fit, dimen = 2) +
 From the results plot we can see that rad seems to most driving variable in our training set for explaining LD1. And from the result object we can see that it has most positive coefficient 3.62727 to LD1 whereas second most effective variable seems to be nox with only 0.307. For the LD2, zn has highest positive coefficient 0.624225492.
 ## Predict the classes with the LDA model on the test data
 
-```{r LDA Model, echo=FALSE}
+```{r LDA Model, echo=TRUE}
 # predict classes with test data
 lda.pred <- predict(lda.fit, newdata = test)
 lda.pred
@@ -241,7 +241,7 @@ The results shows as that the high and low variable groups are grouped much bett
 ## Reload the Boston dataset and standardize the dataset 
 To get better error rate we can try to do standardise our data set by using distances.
 * Scale all variables to have mean = 0 and standard deviation = 1
-```{r Scale, echo=FALSE}
+```{r Scale}
 # Bring data to R
 library(MASS)
 library(dplyr)
@@ -322,7 +322,7 @@ When studying by setting higher value for center, 4 cluster seems to be most com
 
 ## Bonus: k-means on the original Boston data with 3 clusters
 
-```{r Bonus, echo=FALSE}
+```{r Bonus}
 data(Boston)
 # Standaridise data
 standardised_boston <- as.data.frame(Boston %>%mutate_all(~(scale(.) %>% as.vector)))
@@ -385,7 +385,7 @@ Plot of the LDA results shows that tax and rad has most effect to LD1 and age fo
 
 ## SuperBonus 
  
-```{r SuperBonus, echo=FALSE}
+```{r SuperBonus}
 
 
 # Add crime factor to data set scaled in last code chunk
