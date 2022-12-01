@@ -79,3 +79,65 @@ head(as.data.frame(gii))
 df <- merge(hd, gii, by="Country")
 
 write.csv2(df, "human_data.tsv")
+
+#################################################################################################
+# this part also in start of chapter5.rmd
+
+# Read file to R-environment
+human_data<-read.table("human_data.tsv", header=TRUE, sep=";", dec=",")
+
+
+# EDIT Gender Inequality Index column
+colnames(human_data)[colnames(human_data)=="Gender Inequality Index"]<-"GII"
+
+# Libraries
+library(dplyr)
+
+# Change GNI col to numeric by mutate
+human_data$GNI<-human_data %>%
+  dplyr:::select(GNI) %>%
+  mutate(GNI =as.numeric(GNI))
+
+
+# Exclude unneeded variables
+keep <- c("Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
+human_data.subset <- human_data[,keep]
+
+# Editing previous way 'GNI' make the column to class 'dataframe'. This would be problematic in plots
+# so lets' changed it back to really numeric
+human_data.subset$GNI<-as.numeric(unlist(human_data.subset$GNI))
+
+# Remove rows with all NA
+human_data.subset<-human_data.subset[rowSums(is.na(human_data.subset))!= ncol(human_data.subset),]
+dim(human_data.subset)
+
+# Seems that there isn't any complete NA rows
+# Lets' remove rows that contains even one NA
+human_data.subset<-human_data.subset[complete.cases(as.matrix(human_data.subset)), ]
+dim(human_data.subset)
+
+# After subsetting there are 162/195 observations which haven't had any missing variables
+
+# Next we should remove observations related to region
+# to find out which, unique values of Country column should be taken
+
+paste(unique(human_data.subset$Country),collapse=', ')
+
+# From the print:
+regions<-c("South Africa","South Asia","Latin America and the Caribbean","Europe and Central Asia","East Asia and the Pacific","World","Sub-Saharan Africa")
+
+# Subset regions from the human_data
+human_data.subset <- subset(human_data.subset, !(Country %in% regions))
+
+# We can check by dimensions and unique values that correct rows has been removed
+dim(human_data.subset)
+
+# add country to rownames
+rownames(human_data.subset) <- human_data.subset$Country
+
+human_data.subset <- human_data.subset[,!(colnames(human_data.subset) %in% c('Country'))]
+
+# Check dimensions, should be 155 x 8
+dim(human_data.subset)
+
+write.csv2(human_data.subset, "human_data_30112022.tsv", row.names=TRUE)
