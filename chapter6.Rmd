@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r week6, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -132,6 +132,8 @@ pairwise_t_test(mean ~ Group, data=ratsl8s_wo_O, p.adjust.method = "bonferroni")
 
 
 # Add the baseline from the original data as a new variable to the summary data
+rats <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", header = TRUE, sep = '\t')
+
 ratsl8s_2 <- ratsl8s %>%
   mutate(baseline = rats$WD1)
 
@@ -166,7 +168,7 @@ library(dplyr);library(tidyr);library(ggplot2);library(rstatix);library(lme4)
 # Plot the RATSL data
 ggplot(bprsl, aes(x = week, y = bprs, color = subject)) +
   geom_line(aes(linetype = treatment)) +
-  scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 8, 1))
+  scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 8, 1)) +
   scale_y_continuous(name = "BPRS") +
   theme(legend.position = "top")
 
@@ -221,6 +223,7 @@ ggplot(bprsl, aes(x = week, y = Fitted_bprs, colour = subject)) +
   scale_y_continuous(name = "Observed BPRS") +
   theme(legend.position = "top")
 
+# After fitting the model, we can clearly see that there are negative correlation with weeks and BPRS in both treatment groups
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
