@@ -8,25 +8,19 @@ library(tidyr)
 
 # Data wrangling
 
-# Read needed files to R
-# BPRS
+## BPRS
+
+### Read needed files to R
 bprs <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", header =TRUE)
-# Study dataframe
+
+### Study dataframe
 dim(bprs)
 str(bprs)
 head(bprs)
 summary(bprs)
 
-#rats
-rats <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", header =TRUE)
-# Study dataframe
-dim(rats)
-str(rats)
-head(rats)
-summary(rats)
 
-# Edit dataframes
-## BPRS
+## Edit dataframes
 
 ### Turn Categorial variables to factors
 bprs$treatment = factor(bprs$treatment)
@@ -47,12 +41,22 @@ unique(bprsl$weeks)
 bprsl <-  bprsl %>% 
   mutate(week = as.integer(substr(weeks,5, 6)))
 unique(bprsl$week)
-
 ### STUDY NEW LONG DATAFRAME - Glimpse & Summary
 glimpse(bprsl)
 summary(bprsl)
 
-## rats
+
+# RATS
+
+### Read needed files to R
+rats <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", header =TRUE)
+
+### Study dataframe
+dim(rats)
+str(rats)
+head(rats)
+summary(rats)
+
 
 ### Turn Categorial variables to factors
 rats$Group = factor(rats$Group)
@@ -79,6 +83,7 @@ glimpse(ratsl)
 summary(ratsl)
 
 
-## Save tables in .txt format
+## Save both tables
+### Save tables in .txt format
 write.table(bprsl, "BPRSL.txt")
 write.table(ratsl, "ratsl.txt")
