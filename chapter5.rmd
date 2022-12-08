@@ -114,7 +114,7 @@ library(corrplot)
 library(factoextra)
 library(FactoMineR)
 
-# Let's try new package for producion of summary table and plot of the data
+# Let's try new package for production of summary table and plot of the data
 library(modelsummary)
 
 # head of data

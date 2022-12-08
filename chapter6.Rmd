@@ -19,6 +19,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## RATS Data analysis
 
+For the longitudinal data, is typical that the response variable (and possibly some or all of the explanatory variables) is observed more than once on each individual in the study and so could be labelled multivariate.
+RATS Data set contains three groups with each containing 16 subject. Rats mass changes has been followed 64 days and mass has been weighted in seven days period.
+
 ### Bring data
 ```{r cars}
 # Bring data to R and check summaries
@@ -41,37 +44,37 @@ ggplot(ratsl, aes(x = time_variable , y = rats, linetype = ID, color= ID)) +
   facet_grid(. ~ Group, labeller = label_both) +
   theme(legend.position = "none") + 
   scale_y_continuous(limits = c(min(ratsl$rats), max(ratsl$rats)))
+## There seems to quite wide range between different group rats masses. Highest masses are in group 2 masses and lowest in group 1. Base level changes between 250 - 550 g. To make groups more comparable, data should be standardized.
 
-# Standardize the data to see how it effects to the plots
-
+# Standardize the data set
 ratsl <- ratsl %>%
   group_by(time_variable) %>%
   mutate( stdratsl = (rats - mean(rats))/sd(rats) ) %>%
   ungroup()
 
-# Check edited data frame
+# Check and study edited data frame
 str(ratsl)
 glimpse(ratsl)
-# Build new ggplot by using standardised values - mean profiles
+# Build new ggplot by using standardized values - mean profiles
 ggplot(ratsl, aes(x = time_variable, y = stdratsl, linetype = ID, color = ID)) +
   geom_line() +
   scale_linetype_manual(values = rep(1:10, times=4)) +
   facet_grid(. ~ Group, labeller = label_both) +
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(min(ratsl$stdratsl), max(ratsl$stdratsl)))
-
+## After standardization we can see that standardized masses varies between ~ - 1.25 - 1.7. 
 
 # Summary data with mean and standard error of bprs by treatment and week 
 ratss <- ratsl %>%
-  group_by(Group, time_variable) %>%
-  summarise( mean = rats, se = rats) %>%
+  group_by(time_variable, Group) %>%
+  summarise(mean = mean(rats), se = sd(rats)) %>%
   ungroup()
 
 # Glimpse the data
 glimpse(ratss)
 
 # Plot the mean profiles
-ggplot(ratss, aes(x = time_variable, y = mean, linetype = Group, shape = Group)) +
+ggplot(ratss, aes(x = time_variable, y = mean, linetype = Group, shape=Group, color=Group)) +
   geom_line() +
   scale_linetype_manual(values = c(1,2,3)) +
   geom_point(size=3) +
@@ -79,6 +82,19 @@ ggplot(ratss, aes(x = time_variable, y = mean, linetype = Group, shape = Group))
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
   theme(legend.position = c(0.8,0.8)) +
   scale_y_continuous(name = "mean(ratss) +/- se(ratss)")
+## From the plot, it's easy to see that mean in group 1 are much lower than in groups 2 and 3 which error bars overlap each other more when time goes on. By excluding error bar we can study more difference between group 2 and 3.
+
+
+# Plot the mean profiles without error bar
+ggplot(ratss, aes(x = time_variable, y = mean, linetype = Group, shape=Group, color=Group)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2,3)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2,3)) +
+  #geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.8,0.8)) +
+  scale_y_continuous(name = "mean(ratss) +/- se(ratss)")
+## Now we can see that group2 has higher change in mass in later days than group 2, resulting in a smaller range between groups.
 
 # Create a summary data by Group and subject with mean as the summary variable (ignoring baseline time variable 1)
 ratsl8s <- ratsl %>%
@@ -95,8 +111,9 @@ ggplot(ratsl8s, aes(x = Group, y = mean, group=Group, color=Group)) +
   geom_boxplot() +
   stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
   scale_y_continuous(name = "mean(rats), time variable 1-64")
+## Every group seems to contain one 'outlier'.
 
-# Lets' add names to outliers so that those can be easily locate and delete
+# Lets' add names to 'outliers' so that those can be easily locate and delete
 ## Function for finding those
 is_outlier <- function(x) {
   return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
@@ -110,12 +127,11 @@ ratsl8s %>%
     geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3) +
     stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
     scale_y_continuous(name = "mean(rats), time variable 1-64")
+## From the plot we can read that 238.9 , 594 & 495.2 are 'outliers'.
 
-# Create a new data by filtering the outlier 
-## From the plot we can read that 238.9 , 594 & 495.2 are outliers
+# Create a new data by filtering 'the outlier' 
 ratsl8s_wo_O <- subset(ratsl8s,!(mean %in% c(238.9,594,495.2)))
-
-# Let's use same function with ggplot so we can be sure that there isn't any outliers
+## Let's use same function with ggplot so we can be sure that there isn't any outliers
 ratsl8s_wo_O %>%
   group_by(Group) %>%
   mutate(outlier = ifelse(is_outlier(mean), mean, as.numeric(NA))) %>%
@@ -124,40 +140,42 @@ ratsl8s_wo_O %>%
     geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3) +
     stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
     scale_y_continuous(name = "mean(rats), time variable 1-64")
+## Now the box plots seems better so we can make statistical test
 
-# Now the boxplots seems better so we can make statistical test
-## Because we multiple groups, we will use pairwise t-tests and bonferroni p.adjust.method
+# Because there are multiple groups, pairwise t-tests and bonferroni p.adjust.method from R-package rstatix could be used.
 pairwise_t_test(mean ~ Group, data=ratsl8s_wo_O, p.adjust.method = "bonferroni")
-# From the result table we can see that there are significant differences between all groups
-
+## From the result table we can see that there are strongly significant differences between all study groups.
 
 # Add the baseline from the original data as a new variable to the summary data
+## First read original data to R.
 rats <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", header = TRUE, sep = '\t')
-
+## Mutate Baseline WD1 to summary table
 ratsl8s_2 <- ratsl8s %>%
   mutate(baseline = rats$WD1)
+## Check
+str(ratsl8s_2)
 
 # Fit the linear model with the mean as the response 
 fit <- lm(mean ~ baseline + Group, data = ratsl8s_2)
 summary(fit)
-# From the linear model summary we can see that baseline seems to best predictor for the mean.
+## From the linear model summary we can see that baseline seems to be best and only significant predictor for the mean.
 
 ```
 
 ## BPRS Data analyses
 
-A number of graphical displays which can be useful in the preliminary assessment of longitudinal data from clinical trials will now be illustrated using the data shown below taken from Davis (2002). Here 40 male subjects were randomly assigned to one of two treatment groups and each subject was rated on the brief psychiatric rating scale (BPRS) measured before treatment began (week 0) and then at weekly intervals for eight weeks. The BPRS assesses the level of 18 symptom constructs such as hostility, suspiciousness, halluci- nations and grandiosity; each of these is rated from one (not present) to seven (extremely severe). The scale is used to evaluate patients suspected of having schizophrenia
+The brief psychiatric rating scale (BPRS) data set contains 40 male subjects which were randomly assigned to one of two treatment groups and each subject was rated on the BPRS measured before treatment began (week 0) and then at weekly intervals for eight weeks. The BPRS assesses the level of 18 symptom constructs such as hostility, suspiciousness, hallucinations and grandiosity; each of these is rated from one (not present) to seven (extremely severe). The scale is used to evaluate patients suspected of having schizophrenia.
 
 ### Bring data
 ```{r bprsl}
 # Bring data to R
 bprsl=read.table('BPRSL.txt', header=TRUE)
+# Check and study datas' structures.
 str(bprsl)
 bprsl$treatment = factor(bprsl$treatment)
 bprsl$subject <- factor(bprsl$subject)
-
+# Check and study datas' structures after changes.
 str(bprsl)
-
 ```
 
 ### Analysis of Longitudinal Data II: Linear Mixed Effects Models for Normal Response Variables
@@ -171,8 +189,9 @@ ggplot(bprsl, aes(x = week, y = bprs, color = subject)) +
   scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 8, 1)) +
   scale_y_continuous(name = "BPRS") +
   theme(legend.position = "top")
+## From the one single plot, differences between subjects and treatments is hard to read. There seem to be negative correlation between BPRS and time, but it should be studied more.
 
-# create a regression model bprsl_reg
+# Create a regression model bprsl_reg
 bprsl_reg <- "Regression model here!"
 # Fit the linear model with the mean as the response 
 bprsl_reg <- lm(bprs ~ treatment + week, data = bprsl)
@@ -180,7 +199,7 @@ summary(bprsl_reg)
 # Week aka time seems to be better predictor than treatment
 
 # Lets' try another model
-# Create a random intercept model which takes account random effect caused by patient aka subject
+## Create a random intercept model which takes account random effect caused by subject aka patient.
 bprsl_ref <- lmer(bprs ~ treatment + week + (1 | subject), data = bprsl, REML = FALSE)
 summary(bprsl_ref)
 
@@ -189,25 +208,27 @@ summary(bprsl_ref)
 bprsl_ref1 <- lmer(bprs ~ treatment + week + (week | subject), data = bprsl, REML = FALSE)
 summary(bprsl_ref1)
 
-# Two models results can be compared
-# perform an ANOVA test on the two models
+# Two models results can be compared by performing an ANOVA test on the two models
 anova(bprsl_ref, bprsl_ref1)
-# From the results we can say that later model seems to be better one
+## From the results we can say that later model (bprsl_ref1) seems to be better one
 
-# create a random intercept and random slope model with the interaction
+# To learn more about random effect cross variable 'treatment * week' can be added to the model
+## Create a random intercept and random slope model with the interaction
 bprsl_ref2 <- lmer(bprs ~ treatment * week + (week | subject), data = bprsl, REML = FALSE)
 summary(bprsl_ref2)
 
 # Compare two latest model
-# perform an ANOVA test on the two models
+## Perform an ANOVA test on the two models
 anova(bprsl_ref2, bprsl_ref1)
+## Now the model bprsl_ref2 seems to be better for this dataset.
 
-# draw the plot of bprsl with the observed Weight values
+# Draw the plot of bprsl with the observed Weight values
 ggplot(bprsl, aes(x = week, y = bprs, colour = subject)) +
   geom_line(aes(linetype = treatment)) +
   scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 8, 1)) +
   scale_y_continuous(name = "Observed BPRS") +
   theme(legend.position = "top")
+## To clarify the negative correlation, fitted values might give better visualization.
 
 # Create a vector of the fitted values
 Fitted <- fitted(bprsl_ref2)
@@ -215,15 +236,13 @@ Fitted <- fitted(bprsl_ref2)
 # Create a new column fitted to bprsl
 bprsl$Fitted_bprs = Fitted
 
-# draw the plot of bprsl with the Fitted values of weight
+# Draw the plot of bprsl with the Fitted values of weight
 ggplot(bprsl, aes(x = week, y = Fitted_bprs, colour = subject)) +
   facet_grid(. ~ treatment, labeller = label_both) +
   geom_line(aes(linetype = treatment)) +
   scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 8, 1)) +
-  scale_y_continuous(name = "Observed BPRS") +
+  scale_y_continuous(name = "Fitted BPRS") +
   theme(legend.position = "top")
-
-# After fitting the model, we can clearly see that there are negative correlation with weeks and BPRS in both treatment groups
+## After fitting the model, we can clearly see that there are negative correlation with weeks and BPRS in both treatment groups
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
